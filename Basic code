@@ -271,31 +271,6 @@ void compose(){
       }
      }*/
 
-  
-
-
-
-
-int smooth_sensor(int sensor_value) {
-    // subtract the last reading:
-  total = total - readings[readIndex];
-  // read from the sensor:
-  readings[readIndex] = sensor_value;
-  // add the reading to the total:
-  total = total + readings[readIndex];
-  // advance to the next position in the array:
-  readIndex = readIndex + 1;
-
-  // if we're at the end of the array...
-  if (readIndex >= numReadings) {
-    // ...wrap around to the beginning:
-    readIndex = 0;
-  }
-
-  // calculate the average:
-  average = total / numReadings;
-  return average;
-  }
 
 
   void changeState(ledStates newState){
