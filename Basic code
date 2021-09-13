@@ -1,3 +1,6 @@
+#define trigger1 5 // Trigger Pin
+#define echo1 6 // Echo Pin
+
 enum ledStates {ON, OFF, WAVE, INCREASING}; // Here we make nicknames for the different states our program supports.
 enum ledStates ledState; // We define 'ledState' as type ledStates'
 enum ledStates previousLedState = ledState;
@@ -19,7 +22,7 @@ int readings[numReadings];      // the readings from the analog input
 int readIndex = 0;              // the index of the current reading
 int total = 0;                  // the running total
 int average = 0;                // the average
-long duration1;
+long duration;
 float distance;
 float distanceA;
 float distanceB;
@@ -62,8 +65,8 @@ void loop() {
   digitalWrite(trigPin, HIGH);     //Create a 10 micro second pulse
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  duration1 = pulseIn(echoPin, HIGH); //Read the pulse travel time in microseconds.
-  distance= duration1*0.034/2;        //Calculate the distance - speed of sound is 0.034 cm per microsecond
+  duration = pulseIn(echoPin, HIGH); //Read the pulse travel time in microseconds.
+  distance= duration*0.034/2;        //Calculate the distance - speed of sound is 0.034 cm per microsecond
   
   plot("dis", distance);
   compose();
@@ -178,7 +181,7 @@ void compose(){
            }
            break;
       }
-     }else if(distance < 30 && distance >=20){
+     }else if(distance < 30 && distance >= 20){
       switch (ledState){
          case ON:
           // plot("ON", brightness);
@@ -196,7 +199,7 @@ void compose(){
            }
            break;
       }
-     }else if(distance < 20 && distance >=10){
+     }else if(distance < 20 && distance >= 10){
       switch (ledState){
          case ON:
           // plot("ON", brightness);
