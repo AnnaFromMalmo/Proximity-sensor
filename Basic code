@@ -16,7 +16,7 @@ unsigned long startMillis;  //some global variables available anywhere in the pr
 unsigned long currentMillis;
 
 
-const int numReadings = 10; // higher is smoother but less responsive
+const int numReadings = 20; // higher is smoother but less responsive
 
 int readings[numReadings];      // the readings from the analog input
 int readIndex = 0;              // the index of the current reading
@@ -32,7 +32,7 @@ int inRange = 45; //Wide Range First sight of Target
 int TargetRange = 12; //Minimal Parking Range to Target
 const int NoiseReject = 25; //Percentage of reading closeness for rejection filter
 long lastDuration, unfiltered, Sonar, RawSonar;
-const unsigned int maxDuration = 11650; // around 200 cm, the sensor gets flaky at greater distances.
+const unsigned int maxDuration = 15650; // around 200 cm, the sensor gets flaky at greater distances.
 const long speed_of_sound = 29.1;    // speed of sound microseconds per centimeter
 
 
@@ -47,233 +47,7 @@ void setup() {
   }
 }
 
-void loop() {
-  SingleSonar();
-  ////// PRINT FOR PROOF CHECKING //////
-  Serial.print("Filtered Sonar = ");
-  Serial.print(Sonar);
-  Serial.print(" cm, ");
-  Serial.print("Unfiltered Sonar = ");
-  Serial.print(RawSonar);
-  Serial.print(" cm");
-  Serial.println();
-////// END OF PRINT-CHECK //////
-
-  // put your main code here, to run repeatedly:
-  digitalWrite(trigPin, LOW);   //Reset the trigger pin
-  //delay(100);
-  digitalWrite(trigPin, HIGH);     //Create a 10 micro second pulse
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH); //Read the pulse travel time in microseconds.
-  distance= duration*0.034/2;        //Calculate the distance - speed of sound is 0.034 cm per microsecond
-  
-  plot("dis", distance);
-  compose();
-  analogWrite(ledPin, brightness);
-  currentMillis = millis(); //store the current time since the program started
-
-  
- /* int fadeAmount = 5;
-if(distance < 40 && distance >=5){
-  distanceA = distance; 
-  fadeAmount = map(distanceA, 40, 5, 1, 5);
-       brightness = brightness + fadeAmount;
-       plot("4k", distance);
-       if (brightness <= 0 || brightness >= 255) {
-    fadeAmount = -fadeAmount;
-  }
-     }*/
-}
-
-void compose(){
-
-    
-    if(distance >= 300){
-      brightness = 0;
-      plot("2M", brightness);
-      
-    }
-    
-    else if(distance < 300 && distance >=150){
-      distanceA = distance;
-     // brightness = increase_brightness(distanceA, 1);
-     brightness = map(distanceA, 300, 150, 0, 255);
-   //  delay(100);
-      plot("INCREASING", brightness);
-      if (distanceA != distance){
-        distanceA = distance;
-        }
-    }
-  
-
-     else if(distance < 150 && distance >=100){
-      switch (ledState){
-         case ON:
-           plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 250){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-           plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 250){
-            changeState(ON);
-           }
-           break;
-      }
-     }
-     else if(distance < 100 && distance >=50){
-      switch (ledState){
-         case ON:
-           plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 150){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-           plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 150){
-            changeState(ON);
-           }
-           break;
-      }
-     }
-      else if(distance < 50 && distance >=40){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 100){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 100){
-            changeState(ON);
-           }
-           break;
-      }
-     }else if(distance < 40 && distance >=30){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 40){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 40){
-            changeState(ON);
-           }
-           break;
-      }
-     }else if(distance < 30 && distance >= 20){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 30){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 30){
-            changeState(ON);
-           }
-           break;
-      }
-     }else if(distance < 20 && distance >= 10){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 20){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 20){
-            changeState(ON);
-           }
-           break;
-      }
-      }
-      else if(distance < 10 && distance >=0){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 10){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 10){
-            changeState(ON);
-           }
-           break;
-      }
-     }
-}
-     
-     
-     
-     
-    /* else if(distance < 50 && distance >= 5){
-      switch(ledState){
-         case OFF:
-           plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 200){
-            changeState(WAVE);
-           }
-           break;
-        case INCREASING:
-         brightness = increase_brightness(distance, 200);
-         plot("INCREASING", brightness);
-         if (brightness > 250){
-           changeState(WAVE);
-          }
-      break;
-        case WAVE:
-        
-          plot("WAVE", brightness);
-          brightness = sinewave(100,245,10); // you can tweak the parameters of the sinewave
-          delay(100);
-          analogWrite(ledPin, brightness);
-         // if (currentMillis - startMillis >= 5000){ //change state after 5 secs by comparing the time elapsed since we last change state
-          //  changeState(OFF);
-          // }
-           break;
-      }
-     }*/
-
-
-
-  void changeState(ledStates newState){
+void changeState(ledStates newState){
     // call to change state, will keep track of time since last state
     startMillis = millis();
     ledState = newState;
@@ -315,8 +89,9 @@ int sinewave(float duration, float amplitude, int offset){
     value = value + offset; //offset allows you to move the wave up and down on the Y-axis. Should not exceed the value of amplitude to prevent clipping.
     return value;
   }
+  
 
-  void SonarSensor(int trigPin, int echoPin) {
+/*void SonarSensor(int trigPin, int echoPin) {
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
     digitalWrite(trigPin, HIGH);
@@ -339,9 +114,246 @@ int sinewave(float duration, float amplitude, int offset){
     distance = (duration / 2) / speed_of_sound;
     lastDuration = duration; //Stores "successful" reading for filter compensation
   }
+  
   void SingleSonar() {
     SonarSensor(trigger1, echo1);
     Sonar = distance;
     RawSonar = unfiltered;
-    delay(50); //Delay 50ms before next reading.
+    //delay(50); //Delay 50ms before next reading.
+  }*/
+
+void loop() {
+  /*SingleSonar();
+  ////// PRINT FOR PROOF CHECKING //////
+  Serial.print("Filtered Sonar = ");
+  Serial.print(Sonar);
+  Serial.print(" cm, ");
+  Serial.print("Unfiltered Sonar = ");
+  Serial.print(RawSonar);
+  Serial.print(" cm");
+  Serial.println();
+////// END OF PRINT-CHECK //////*/
+
+  // put your main code here, to run repeatedly:
+  digitalWrite(trigPin, LOW);   //Reset the trigger pin
+  //delay(100);
+  digitalWrite(trigPin, HIGH);     //Create a 10 micro second pulse
+  //delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH); //Read the pulse travel time in microseconds.
+  distance= duration*0.034/2;        //Calculate the distance - speed of sound is 0.034 cm per microsecond
+  
+  plot("dis", distance);
+  compose();
+  analogWrite(ledPin, brightness);
+  currentMillis = millis(); //store the current time since the program started
+
+}
+
+void compose(){
+    
+    if(distance >= 300){
+      brightness = 0;
+      plot("3M", brightness);
+    }
+    
+    else if(distance < 300 && distance >=150){
+      distanceA = distance;
+     // brightness = increase_brightness(distanceA, 1);
+     brightness = map(distanceA, 300, 150, 0, 255);
+   //  delay(100);
+      plot("INCREASING", brightness);
+      if (distanceA != distance){
+        distanceA = distance;
+        }
+    }
+  
+
+     else if(distance < 150 && distance >=100){
+      switch (ledState){
+         case ON:
+           plot("ON", brightness);
+           brightness = 255;
+            if (currentMillis - startMillis >= 200){
+            changeState(OFF);
+           }
+           break;
+
+         case OFF:
+           plot("OFF", brightness);
+           brightness = 0;
+           if (currentMillis - startMillis >= 200){
+            changeState(ON);
+           }
+           break;
+      }
+     }
+
+
+     else if(distance < 100 && distance >=50){
+      switch (ledState){
+         case ON:
+           plot("ON", brightness);
+           brightness = 255;
+            if (currentMillis - startMillis >= 150){
+            changeState(OFF);
+           }
+           break;
+
+         case OFF:
+           plot("OFF", brightness);
+           brightness = 0;
+           if (currentMillis - startMillis >= 150){
+            changeState(ON);
+           }
+           break;
+      }
+     }
+
+
+     else if(distance < 50 && distance >=40){
+      switch (ledState){
+         case ON:
+          // plot("ON", brightness);
+           brightness = 255;
+            if (currentMillis - startMillis >= 100){
+            changeState(OFF);
+           }
+           break;
+
+         case OFF:
+         //  plot("OFF", brightness);
+           brightness = 0;
+           if (currentMillis - startMillis >= 100){
+            changeState(ON);
+           }
+           break;
+      }
+     }
+     
+     
+     else if(distance < 40 && distance >=30){
+      switch (ledState){
+         case ON:
+          // plot("ON", brightness);
+           brightness = 255;
+            if (currentMillis - startMillis >= 50){
+            changeState(OFF);
+           }
+           break;
+
+         case OFF:
+         //  plot("OFF", brightness);
+           brightness = 0;
+           if (currentMillis - startMillis >= 50){
+            changeState(ON);
+           }
+           break;
+      }
+     }
+     
+     
+     else if(distance < 30 && distance >= 20){
+      switch (ledState){
+         case ON:
+          // plot("ON", brightness);
+           brightness = 255;
+            if (currentMillis - startMillis >= 30){
+            changeState(OFF);
+           }
+           break;
+
+         case OFF:
+         //  plot("OFF", brightness);
+           brightness = 0;
+           if (currentMillis - startMillis >= 30){
+            changeState(ON);
+           }
+           break;
+      }
+     }
+     
+     
+     else if(distance < 20 && distance >= 10){
+      switch (ledState){
+         case ON:
+          // plot("ON", brightness);
+           brightness = 255;
+            if (currentMillis - startMillis >= 20){
+            changeState(OFF);
+           }
+           break;
+
+         case OFF:
+         //  plot("OFF", brightness);
+           brightness = 0;
+           if (currentMillis - startMillis >= 20){
+            changeState(ON);
+           }
+           break;
+      }
+    }
+
+
+      else if(distance < 10 && distance >=0){
+      switch (ledState){
+         case ON:
+          // plot("ON", brightness);
+           brightness = 255;
+            if (currentMillis - startMillis >= 10){
+            changeState(OFF);
+           }
+           break;
+
+         case OFF:
+         //  plot("OFF", brightness);
+           brightness = 0;
+           if (currentMillis - startMillis >= 10){
+            changeState(ON);
+           }
+           break;
+      }
+      }      }
+    
+
+      //WAVE was too comforting
+    /* else if(distance < 50 && distance >= 5){
+      switch(ledState){
+         case OFF:
+           plot("OFF", brightness);
+           brightness = 0;
+           if (currentMillis - startMillis >= 200){
+            changeState(WAVE);
+           }
+           break;
+        case INCREASING:
+         brightness = increase_brightness(distance, 200);
+         plot("INCREASING", brightness);
+         if (brightness > 250){
+           changeState(WAVE);
+          }
+      break;
+        case WAVE:
+        
+          plot("WAVE", brightness);
+          brightness = sinewave(100,245,10); // you can tweak the parameters of the sinewave
+          delay(100);
+          analogWrite(ledPin, brightness);
+         // if (currentMillis - startMillis >= 5000){ //change state after 5 secs by comparing the time elapsed since we last change state
+          //  changeState(OFF);
+          // }
+           break;
+      }
+     }*/
+//ANOTHER ONE
+ /* int fadeAmount = 5;
+if(distance < 40 && distance >=5){
+  distanceA = distance; 
+  fadeAmount = map(distanceA, 40, 5, 1, 5);
+       brightness = brightness + fadeAmount;
+       plot("4k", distance);
+       if (brightness <= 0 || brightness >= 255) {
+    fadeAmount = -fadeAmount;
   }
+     }*/
+
