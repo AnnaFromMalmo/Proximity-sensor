@@ -91,7 +91,7 @@ int sinewave(float duration, float amplitude, int offset){
   }
   
 
-/*void SonarSensor(int trigPin, int echoPin) {
+void SonarSensor(int trigPin, int echoPin) {
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
     digitalWrite(trigPin, HIGH);
@@ -116,37 +116,37 @@ int sinewave(float duration, float amplitude, int offset){
   }
   
   void SingleSonar() {
-    SonarSensor(trigger1, echo1);
-    Sonar = distance;
-    RawSonar = unfiltered;
-    //delay(50); //Delay 50ms before next reading.
-  }*/
+
+  }
 
 void loop() {
-  /*SingleSonar();
+  SonarSensor(trigPin, echoPin);
+    
   ////// PRINT FOR PROOF CHECKING //////
   Serial.print("Filtered Sonar = ");
-  Serial.print(Sonar);
+  Serial.print(distance);
   Serial.print(" cm, ");
   Serial.print("Unfiltered Sonar = ");
-  Serial.print(RawSonar);
+  Serial.print(unfiltered);
   Serial.print(" cm");
   Serial.println();
-////// END OF PRINT-CHECK //////*/
+////// END OF PRINT-CHECK //////
 
   // put your main code here, to run repeatedly:
-  digitalWrite(trigPin, LOW);   //Reset the trigger pin
+ /* digitalWrite(trigPin, LOW);   //Reset the trigger pin
   //delay(100);
   digitalWrite(trigPin, HIGH);     //Create a 10 micro second pulse
   //delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH); //Read the pulse travel time in microseconds.
-  distance= duration*0.034/2;        //Calculate the distance - speed of sound is 0.034 cm per microsecond
+  distance= duration*0.034/2;        //Calculate the distance - speed of sound is 0.034 cm per microsecond*/
   
-  plot("dis", distance);
+  //plot("dis", distance);
+  
   compose();
   analogWrite(ledPin, brightness);
   currentMillis = millis(); //store the current time since the program started
+delay(30); //Delay 50ms before next reading.
 
 }
 
@@ -356,4 +356,3 @@ if(distance < 40 && distance >=5){
     fadeAmount = -fadeAmount;
   }
      }*/
-
