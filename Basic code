@@ -30,11 +30,11 @@ int ldr;
 
 int inRange = 45; //Wide Range First sight of Target
 int TargetRange = 12; //Minimal Parking Range to Target
-const int NoiseReject = 25; //Percentage of reading closeness for rejection filter
+const int NoiseReject = 50; //Percentage of reading closeness for rejection filter
 long lastDuration, unfiltered, Sonar, RawSonar;
-const unsigned int maxDuration = 15650; // around 200 cm, the sensor gets flaky at greater distances.
+const unsigned int maxDuration = 19475; // around 200 cm, the sensor gets flaky at greater distances.
 const long speed_of_sound = 29.1;    // speed of sound microseconds per centimeter
-
+float interval;
 
 void setup() {
   // put your setup code here, to run once:
@@ -42,53 +42,14 @@ void setup() {
   pinMode(echoPin, INPUT); 
   pinMode(ledPin, OUTPUT); // set ledPin as an output.
   Serial.begin(9600); 
-  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+  /*for (int thisReading = 0; thisReading < numReadings; thisReading++) {
     readings[thisReading] = 0;
-  }
+  }*/
 }
 
-void changeState(ledStates newState){
-    // call to change state, will keep track of time since last state
-    startMillis = millis();
-    ledState = newState;
-  }
-  
-void plot(char *state, int brightness){
-    // use this function to plot a graph.
-    // it will normalize the auto-scaling plotter
 
-    if ((p % plotFrequency) == 0){
-      Serial.print(state);
-      Serial.print(", ");
-      Serial.print(brightness);
-      Serial.println(", 0, 300");
-      Serial.print("Distance: ");        //Display the distance on the serial monitor
-      Serial.println(distance);
-    }
-    p++;
-  }
 
-int increase_brightness (float distanceA, float velocity){
-    return brightness = distanceA + velocity;
-  }
 
-int exponential_increase (int brightness, float velocity){
-    return brightness = 1 + brightness * velocity;
-}
-
-int decrease_brightness (int brightness, float velocity){
-    return brightness = brightness - 1 * velocity;
-  }
-
-int sinewave(float duration, float amplitude, int offset){
-    // Generate a sine oscillation, return a number.
-    // In case you are using this for analogWrite, make sure the amplitude does not exceed 256
-    float period = millis()/duration; // Duration in ms determines the wavelength.
-    float midpoint = amplitude / 2; // set the midpoint of the wave at half the amplitude so there are no negative numbers
-    int value = midpoint + midpoint * sin ( period * 2.0 * PI );
-    value = value + offset; //offset allows you to move the wave up and down on the Y-axis. Should not exceed the value of amplitude to prevent clipping.
-    return value;
-  }
   
 
 void SonarSensor(int trigPin, int echoPin) {
@@ -99,25 +60,23 @@ void SonarSensor(int trigPin, int echoPin) {
     digitalWrite(trigPin, LOW);
     duration = pulseIn(echoPin, HIGH);
     unfiltered = (duration / 2) / speed_of_sound; //Stores preliminary reading to compare
-    if(duration <= 8) duration = ((inRange + 1) * speed_of_sound * 2); 
+    if(duration <= 5) duration = ((inRange + 1) * speed_of_sound * 2); 
     //Rejects very low readings, kicks readout to outside detection range
     if(lastDuration == 0) lastDuration = duration;
     //Compensation parameters for intial start-up
-    if(duration > (5 * maxDuration)) duration = lastDuration;
+    if(duration > (1 * maxDuration)) duration = maxDuration;
     //Rejects any reading defined to be out of sensor capacity (>1000)
     //Sets the fault reading to the last known "successful" reading
     if(duration > maxDuration) duration = maxDuration;  
     //Caps Reading output at defined maximum distance (~200)
     if((duration - lastDuration) < ((-1) * (NoiseReject / 100) * lastDuration)){
-      distance = (lastDuration / 2) / speed_of_sound; //Noise filter for low range drops
+      distance = (duration / 2) / speed_of_sound; //Noise filter for low range drops
     }
     distance = (duration / 2) / speed_of_sound;
     lastDuration = duration; //Stores "successful" reading for filter compensation
   }
   
-  void SingleSonar() {
 
-  }
 
 void loop() {
   SonarSensor(trigPin, echoPin);
@@ -132,227 +91,72 @@ void loop() {
   Serial.println();
 ////// END OF PRINT-CHECK //////
 
-  // put your main code here, to run repeatedly:
- /* digitalWrite(trigPin, LOW);   //Reset the trigger pin
-  //delay(100);
-  digitalWrite(trigPin, HIGH);     //Create a 10 micro second pulse
-  //delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH); //Read the pulse travel time in microseconds.
-  distance= duration*0.034/2;        //Calculate the distance - speed of sound is 0.034 cm per microsecond*/
-  
-  //plot("dis", distance);
-  
-  compose();
-  analogWrite(ledPin, brightness);
+ 
   currentMillis = millis(); //store the current time since the program started
-delay(30); //Delay 50ms before next reading.
-
+  if(distance > 300){
+   threeHundred();
+    }
+    else if(distance < 300 && distance >=150){
+    threeToOneFifty();
+    } 
+    else if(distance < 150 && distance > 0){
+     oneFiftyToZero();
+    }
+    else {
+      digitalWrite(ledPin, ledState);
+      ledState = LOW;
+    }
+//delay(20); //Delay 50ms before next reading.
 }
 
-void compose(){
-    
-    if(distance >= 300){
-      brightness = 0;
-      plot("3M", brightness);
-    }
-    
-    else if(distance < 300 && distance >=150){
-      distanceA = distance;
-     // brightness = increase_brightness(distanceA, 1);
+
+
+void threeHundred(){
+   brightness = 0;
+    digitalWrite(ledPin, brightness);
+}
+
+void threeToOneFifty(){
+    distanceA = distance;
+     analogWrite(ledPin, brightness);
      brightness = map(distanceA, 300, 150, 0, 255);
-   //  delay(100);
-      plot("INCREASING", brightness);
+      
       if (distanceA != distance){
         distanceA = distance;
         }
-    }
-  
+}
 
-     else if(distance < 150 && distance >=100){
-      switch (ledState){
+void oneFiftyToZero(){
+   interval = map(distance, 300, 0, 250, 10);
+      
+   
+    // save the last time you blinked the LED
+   
+ switch (ledState){
          case ON:
-           plot("ON", brightness);
+           digitalWrite(ledPin, brightness);
            brightness = 255;
-            if (currentMillis - startMillis >= 200){
+            if (currentMillis - startMillis >= interval){
             changeState(OFF);
            }
            break;
 
          case OFF:
-           plot("OFF", brightness);
+           digitalWrite(ledPin, brightness);
            brightness = 0;
-           if (currentMillis - startMillis >= 200){
+           if (currentMillis - startMillis >= interval){
             changeState(ON);
            }
            break;
-      }
-     }
+      } 
 
-
-     else if(distance < 100 && distance >=50){
-      switch (ledState){
-         case ON:
-           plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 150){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-           plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 150){
-            changeState(ON);
-           }
-           break;
-      }
-     }
-
-
-     else if(distance < 50 && distance >=40){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 100){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 100){
-            changeState(ON);
-           }
-           break;
-      }
-     }
-     
-     
-     else if(distance < 40 && distance >=30){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 50){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 50){
-            changeState(ON);
-           }
-           break;
-      }
-     }
-     
-     
-     else if(distance < 30 && distance >= 20){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 30){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 30){
-            changeState(ON);
-           }
-           break;
-      }
-     }
-     
-     
-     else if(distance < 20 && distance >= 10){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 20){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 20){
-            changeState(ON);
-           }
-           break;
-      }
-    }
-
-
-      else if(distance < 10 && distance >=0){
-      switch (ledState){
-         case ON:
-          // plot("ON", brightness);
-           brightness = 255;
-            if (currentMillis - startMillis >= 10){
-            changeState(OFF);
-           }
-           break;
-
-         case OFF:
-         //  plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 10){
-            changeState(ON);
-           }
-           break;
-      }
-      }      }
+    digitalWrite(ledPin, ledState);
     
+}
 
-      //WAVE was too comforting
-    /* else if(distance < 50 && distance >= 5){
-      switch(ledState){
-         case OFF:
-           plot("OFF", brightness);
-           brightness = 0;
-           if (currentMillis - startMillis >= 200){
-            changeState(WAVE);
-           }
-           break;
-        case INCREASING:
-         brightness = increase_brightness(distance, 200);
-         plot("INCREASING", brightness);
-         if (brightness > 250){
-           changeState(WAVE);
-          }
-      break;
-        case WAVE:
-        
-          plot("WAVE", brightness);
-          brightness = sinewave(100,245,10); // you can tweak the parameters of the sinewave
-          delay(100);
-          analogWrite(ledPin, brightness);
-         // if (currentMillis - startMillis >= 5000){ //change state after 5 secs by comparing the time elapsed since we last change state
-          //  changeState(OFF);
-          // }
-           break;
-      }
-     }*/
-//ANOTHER ONE
- /* int fadeAmount = 5;
-if(distance < 40 && distance >=5){
-  distanceA = distance; 
-  fadeAmount = map(distanceA, 40, 5, 1, 5);
-       brightness = brightness + fadeAmount;
-       plot("4k", distance);
-       if (brightness <= 0 || brightness >= 255) {
-    fadeAmount = -fadeAmount;
+void changeState(ledStates newState){
+    // call to change state, will keep track of time since last state
+    startMillis = millis();
+    ledState = newState;
   }
-     }*/
+
